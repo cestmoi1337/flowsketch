@@ -19,6 +19,7 @@ export type ParsedTask = {
   label: string;
   group?: string;
   verb?: string;
+  kind?: "decision" | "task";
 };
 
 export function parseTasks(input: string): ParsedTask[] {
@@ -34,12 +35,14 @@ export function parseTasks(input: string): ParsedTask[] {
       );
       const firstWord = line.split(/\s+/)[0]?.toLowerCase();
       const verb = leadingVerbs.includes(firstWord) ? firstWord : undefined;
+      const isDecision = line.startsWith("?") || line.toLowerCase().startsWith("if ");
 
       return {
         id,
         label: line.replace(/#([\p{L}\p{N}_-]+)/gu, "").trim(),
         group: hashtags[0],
-        verb
+        verb,
+        kind: isDecision ? "decision" : "task"
       };
     });
 }

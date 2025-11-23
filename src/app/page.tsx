@@ -11,10 +11,12 @@ import ReactFlow, {
   MiniMap,
   Node,
   NodeChange,
+  Position,
   ReactFlowProvider,
   addEdge,
   applyEdgeChanges,
-  applyNodeChanges
+  applyNodeChanges,
+  updateEdge
 } from "reactflow";
 import "reactflow/dist/style.css";
 import { toPng, toSvg } from "html-to-image";
@@ -53,8 +55,17 @@ function createFlow(tasks: ReturnType<typeof parseTasks>): FlowState {
     data: {
       label: task.label,
       group: task.group,
-      verb: task.verb
-    }
+      verb: task.verb,
+      kind: task.kind ?? "task"
+    },
+    style:
+      task.kind === "decision"
+        ? {
+            borderStyle: "dashed",
+            borderColor: "#f59e0b",
+            background: "linear-gradient(135deg,#fff7ed,#fffbeb)"
+          }
+        : undefined
   }));
 
   const edges: Edge[] = tasks
@@ -64,7 +75,9 @@ function createFlow(tasks: ReturnType<typeof parseTasks>): FlowState {
       return {
         id: `${task.id}-${next.id}`,
         source: task.id,
+        sourceHandle: "sb",
         target: next.id,
+        targetHandle: "t",
         type: "smoothstep",
         animated: false,
         style: { strokeWidth: 2 }
@@ -82,6 +95,9 @@ function DiagramApp() {
     createFlow(parseTasks(defaultText))
   );
   const [exporting, setExporting] = useState<ExportType | null>(null);
+  const [gridSize, setGridSize] = useState(10);
+  const [snapToGrid, setSnapToGrid] = useState(true);
+  const [autoConnectSequence, setAutoConnectSequence] = useState(true);
   const diagramRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -107,6 +123,15 @@ function DiagramApp() {
     []
   );
 
+  const onEdgeUpdate = useCallback(
+    (oldEdge: Edge, newConnection: Connection) =>
+      setFlow((current) => ({
+        ...current,
+        edges: updateEdge(oldEdge, newConnection, current.edges)
+      })),
+    []
+  );
+
   const onConnect = useCallback(
     (connection: Connection) =>
       setFlow((current) => ({
@@ -118,8 +143,12 @@ function DiagramApp() {
 
   const regenerate = useCallback(() => {
     const parsed = parseTasks(text);
-    setFlow(createFlow(parsed));
-  }, [text]);
+    const nextFlow = createFlow(parsed);
+    setFlow((current) => ({
+      nodes: nextFlow.nodes,
+      edges: autoConnectSequence ? nextFlow.edges : current.edges
+    }));
+  }, [text, autoConnectSequence]);
 
   const handleNodeLabelChange = useCallback((id: string, label: string) => {
     setFlow((current) => ({
@@ -299,6 +328,64 @@ function DiagramApp() {
                   <li>Use #tags to hint grouping</li>
                 </ul>
               </div>
+              <div className="glass-panel px-4 py-3">
+                <p className="font-semibold text-slate-700 dark:text-slate-200">
+                  Branching
+                </p>
+                <p className="text-slate-500 dark:text-slate-400">
+                  Lines starting with “?” or “if ...” render as decision nodes. Use connectors to create branches.
+                </p>
+                <div className="mt-2">
+                  <label className="inline-flex items-center gap-2 text-slate-600 dark:text-slate-300">
+                    <input
+                      type="checkbox"
+                      checked={autoConnectSequence}
+                      onChange={(e) => setAutoConnectSequence(e.target.checked)}
+                      className="h-4 w-4"
+                    />
+                    <span className="text-sm">Auto-connect sequentially</span>
+                  </label>
+                </div>
+              </div>
+              <div className="glass-panel px-4 py-3">
+                <p className="font-semibold text-slate-700 dark:text-slate-200">
+                  Grid & snapping
+                </p>
+                <div className="mt-2 flex items-center gap-2">
+                  <label className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+                    <span className="text-[12px] uppercase tracking-[0.08em]">
+                      Size
+                    </span>
+                    <input
+                      type="number"
+                      min={4}
+                      max={80}
+                      value={gridSize}
+                      onChange={(e) =>
+                        setGridSize(
+                          Math.min(
+                            80,
+                            Math.max(4, Number(e.target.value) || 10)
+                          )
+                        )
+                      }
+                      className="w-20 rounded-lg border border-border-light bg-white px-2 py-1 text-sm text-slate-900 outline-none focus:border-accent focus:ring-2 focus:ring-accent/30 dark:border-border-dark dark:bg-slate-900 dark:text-slate-100"
+                    />
+                    <span className="text-xs text-slate-400">px</span>
+                  </label>
+                </div>
+                <div className="mt-3">
+                  <label className="inline-flex items-center gap-2 text-slate-600 dark:text-slate-300">
+                    <input
+                      type="checkbox"
+                      checked={snapToGrid}
+                      onChange={(e) => setSnapToGrid(e.target.checked)}
+                      className="h-4 w-4"
+                    />
+                    <span className="text-sm">Snap to grid</span>
+                  </label>
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -339,24 +426,29 @@ function DiagramApp() {
           <div className="relative h-[620px] w-full">
             <div ref={diagramRef} className="h-full w-full">
               <ReactFlow
-                nodes={nodes.map((node) => ({
-                  ...node,
-                  data: {
-                    ...node.data,
-                    onChange: (value: string) =>
-                      handleNodeLabelChange(node.id, value)
-                  }
-                }))}
-                edges={edges}
-                onNodesChange={onNodesChange}
-                onEdgesChange={onEdgesChange}
-                onConnect={onConnect}
-                nodeTypes={nodeTypes}
-                fitView
-                fitViewOptions={{ padding: 0.2 }}
-                defaultEdgeOptions={{
-                  markerEnd: {
-                    type: "arrowclosed",
+            nodes={nodes.map((node) => ({
+              ...node,
+              data: {
+                ...node.data,
+                onChange: (value: string) =>
+                  handleNodeLabelChange(node.id, value)
+              }
+            }))}
+            edges={edges}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onEdgeUpdate={onEdgeUpdate}
+            onConnect={onConnect}
+            nodeTypes={nodeTypes}
+            fitView
+            fitViewOptions={{ padding: 0.2 }}
+            connectionMode="loose"
+            edgeUpdaterRadius={12}
+            snapToGrid={snapToGrid}
+            snapGrid={[gridSize, gridSize]}
+            defaultEdgeOptions={{
+              markerEnd: {
+                type: "arrowclosed",
                     color: theme === "dark" ? "#e2e8f0" : "#0f172a"
                   },
                   style: {
@@ -373,10 +465,10 @@ function DiagramApp() {
                 />
                 <Controls showInteractive={false} />
                 <Background
-                  gap={24}
-                  color={theme === "dark" ? "#1f2937" : "#e2e8f0"}
+                  gap={gridSize}
+                  color={theme === "dark" ? "#475569" : "#cbd5e1"}
                   size={1.2}
-                  className="opacity-60"
+                  style={{ opacity: 0.9 }}
                 />
               </ReactFlow>
             </div>
