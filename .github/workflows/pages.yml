@@ -33,7 +33,6 @@ jobs:
           BASE_PATH: ${{ secrets.BASE_PATH }}
         run: |
           npm run build
-          npx next export
           touch out/.nojekyll
 
       - name: Upload artifact
