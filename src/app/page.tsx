@@ -12,6 +12,7 @@ import ReactFlow, {
   MiniMap,
   Node,
   NodeChange,
+  MarkerType,
   Position,
   ReactFlowProvider,
   addEdge,
@@ -449,12 +450,12 @@ function DiagramApp() {
             snapGrid={[gridSize, gridSize]}
             defaultEdgeOptions={{
               markerEnd: {
-                type: "arrowclosed",
-                    color: theme === "dark" ? "#e2e8f0" : "#0f172a"
-                  },
-                  style: {
-                    stroke: theme === "dark" ? "#94a3b8" : "#0f172a",
-                    strokeWidth: 2
+                type: MarkerType.ArrowClosed,
+                color: theme === "dark" ? "#e2e8f0" : "#0f172a"
+              },
+              style: {
+                stroke: theme === "dark" ? "#94a3b8" : "#0f172a",
+                strokeWidth: 2
                   }
                 }}
               >
