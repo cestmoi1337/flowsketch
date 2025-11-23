@@ -1,0 +1,396 @@
+/* eslint-disable react/no-unescaped-entities */
+"use client";
+
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import ReactFlow, {
+  Background,
+  Connection,
+  Controls,
+  Edge,
+  EdgeChange,
+  MiniMap,
+  Node,
+  NodeChange,
+  ReactFlowProvider,
+  addEdge,
+  applyEdgeChanges,
+  applyNodeChanges
+} from "reactflow";
+import "reactflow/dist/style.css";
+import { toPng, toSvg } from "html-to-image";
+import jsPDF from "jspdf";
+import clsx from "clsx";
+import { parseTasks } from "@/lib/parseTasks";
+import EditableNode from "@/components/EditableNode";
+
+type ExportType = "png" | "svg" | "pdf";
+
+const defaultText = `Create project outline
+Identify stakeholders #team
+Draft requirements
+Review with leads
+Design solution #design
+Build prototype
+Test internally
+Deploy to staging
+Collect feedback
+Ship to production`;
+
+const nodeTypes = { editableNode: EditableNode };
+
+type FlowState = {
+  nodes: Node[];
+  edges: Edge[];
+};
+
+function createFlow(tasks: ReturnType<typeof parseTasks>): FlowState {
+  const ySpacing = 140;
+
+  const nodes: Node[] = tasks.map((task, index) => ({
+    id: task.id,
+    type: "editableNode",
+    position: { x: (index % 2) * 40, y: index * ySpacing },
+    data: {
+      label: task.label,
+      group: task.group,
+      verb: task.verb
+    }
+  }));
+
+  const edges: Edge[] = tasks
+    .map((task, index) => {
+      const next = tasks[index + 1];
+      if (!next) return undefined;
+      return {
+        id: `${task.id}-${next.id}`,
+        source: task.id,
+        target: next.id,
+        type: "smoothstep",
+        animated: false,
+        style: { strokeWidth: 2 }
+      } satisfies Edge;
+    })
+    .filter(Boolean) as Edge[];
+
+  return { nodes, edges };
+}
+
+function DiagramApp() {
+  const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [text, setText] = useState(defaultText);
+  const [{ nodes, edges }, setFlow] = useState<FlowState>(() =>
+    createFlow(parseTasks(defaultText))
+  );
+  const [exporting, setExporting] = useState<ExportType | null>(null);
+  const diagramRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.toggle("dark", theme === "dark");
+  }, [theme]);
+
+  const onNodesChange = useCallback(
+    (changes: NodeChange[]) =>
+      setFlow((current) => ({
+        ...current,
+        nodes: applyNodeChanges(changes, current.nodes)
+      })),
+    []
+  );
+
+  const onEdgesChange = useCallback(
+    (changes: EdgeChange[]) =>
+      setFlow((current) => ({
+        ...current,
+        edges: applyEdgeChanges(changes, current.edges)
+      })),
+    []
+  );
+
+  const onConnect = useCallback(
+    (connection: Connection) =>
+      setFlow((current) => ({
+        ...current,
+        edges: addEdge(connection, current.edges)
+      })),
+    []
+  );
+
+  const regenerate = useCallback(() => {
+    const parsed = parseTasks(text);
+    setFlow(createFlow(parsed));
+  }, [text]);
+
+  const handleNodeLabelChange = useCallback((id: string, label: string) => {
+    setFlow((current) => ({
+      ...current,
+      nodes: current.nodes.map((node) =>
+        node.id === id
+          ? { ...node, data: { ...node.data, label } }
+          : node
+      )
+    }));
+  }, []);
+
+  const canExport = nodes.length > 0;
+
+  const exportDiagram = useCallback(
+    async (type: ExportType) => {
+      if (!diagramRef.current || !canExport) return;
+      setExporting(type);
+      const element = diagramRef.current;
+      const { width, height } = element.getBoundingClientRect();
+      const backgroundColor = theme === "dark" ? "#0f172a" : "#f8fafc";
+
+      try {
+        if (type === "png") {
+          const dataUrl = await toPng(element, {
+            backgroundColor,
+            pixelRatio: 2
+          });
+          const link = document.createElement("a");
+          link.download = "flowsketch.png";
+          link.href = dataUrl;
+          link.click();
+        }
+
+        if (type === "svg") {
+          const dataUrl = await toSvg(element, { backgroundColor });
+          const link = document.createElement("a");
+          link.download = "flowsketch.svg";
+          link.href = dataUrl;
+          link.click();
+        }
+
+        if (type === "pdf") {
+          const dataUrl = await toPng(element, {
+            backgroundColor,
+            pixelRatio: 2
+          });
+          const orientation = width > height ? "l" : "p";
+          const doc = new jsPDF({
+            orientation,
+            unit: "px",
+            format: [width, height]
+          });
+          doc.addImage(dataUrl, "PNG", 0, 0, width, height);
+          doc.save("flowsketch.pdf");
+        }
+      } finally {
+        setExporting(null);
+      }
+    },
+    [canExport, theme]
+  );
+
+  const groupedCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    nodes.forEach((node) => {
+      const group = (node.data as { group?: string })?.group;
+      if (group) counts[group] = (counts[group] || 0) + 1;
+    });
+    return counts;
+  }, [nodes]);
+
+  return (
+    <div
+      className={clsx(
+        "min-h-screen bg-gradient-to-b from-white via-surface-light to-surface-light px-6 py-8 text-slate-900 transition dark:from-surface-dark dark:via-slate-950 dark:to-surface-dark",
+        "sm:px-10 lg:px-14"
+      )}
+    >
+      <header className="mb-8 flex items-center justify-between gap-3">
+        <div>
+          <p className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+            FlowSketch
+          </p>
+          <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">
+            Paste → Generate → Export
+          </h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Turn rough task lists into clean, draggable workflow diagrams in seconds.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            className="btn-ghost"
+            onClick={() =>
+              setTheme((t) => (t === "light" ? "dark" : "light"))
+            }
+            aria-label="Toggle theme"
+          >
+            {theme === "light" ? "🌙 Dark" : "☀️ Light"}
+          </button>
+          <a
+            className="btn-primary"
+            href="https://github.com"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Docs
+          </a>
+        </div>
+      </header>
+
+      <div className="grid gap-6 lg:grid-cols-[minmax(320px,380px)_1fr]">
+        <section className="glass-panel h-fit">
+          <div className="flex items-center justify-between border-b border-border-light px-6 py-4 dark:border-border-dark">
+            <div>
+              <p className="text-xs uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                Input
+              </p>
+              <h2 className="text-lg font-semibold">Tasks</h2>
+            </div>
+            <button className="btn-ghost text-xs" onClick={regenerate}>
+              Generate workflow
+            </button>
+          </div>
+
+          <div className="space-y-4 p-6">
+            <textarea
+              className="input-base h-[280px] font-mono text-sm"
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder="Paste tasks, one per line..."
+            />
+
+            <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+              <span>{nodes.length} nodes</span>
+              <button
+                className="btn-ghost text-xs"
+                onClick={() => setText(defaultText)}
+              >
+                Reset sample
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="glass-panel px-4 py-3">
+                <p className="font-semibold text-slate-700 dark:text-slate-200">
+                  Auto-grouping
+                </p>
+                <p className="text-slate-500 dark:text-slate-400">
+                  Verb detection + #hashtags stored for future lanes.
+                </p>
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {Object.entries(groupedCounts).length === 0 ? (
+                    <span className="rounded-full bg-slate-100 px-2 py-1 text-[11px] text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                      none detected
+                    </span>
+                  ) : (
+                    Object.entries(groupedCounts).map(([group, count]) => (
+                      <span
+                        key={group}
+                        className="rounded-full bg-accent-soft px-2 py-1 text-[11px] text-accent"
+                      >
+                        #{group} ({count})
+                      </span>
+                    ))
+                  )}
+                </div>
+              </div>
+              <div className="glass-panel px-4 py-3">
+                <p className="font-semibold text-slate-700 dark:text-slate-200">
+                  Tips
+                </p>
+                <ul className="list-disc space-y-1 pl-4 text-slate-500 dark:text-slate-400">
+                  <li>Double-click a box to edit text</li>
+                  <li>Drag nodes; connectors reroute automatically</li>
+                  <li>Use #tags to hint grouping</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="glass-panel relative min-h-[540px] overflow-hidden">
+          <div className="flex items-center justify-between border-b border-border-light px-6 py-4 dark:border-border-dark">
+            <div>
+              <p className="text-xs uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                Diagram
+              </p>
+              <h2 className="text-lg font-semibold">Workflow preview</h2>
+            </div>
+            <div className="toolbar">
+              <button
+                className="btn-ghost text-xs"
+                disabled={!canExport || Boolean(exporting)}
+                onClick={() => exportDiagram("png")}
+              >
+                {exporting === "png" ? "Exporting..." : "PNG"}
+              </button>
+              <button
+                className="btn-ghost text-xs"
+                disabled={!canExport || Boolean(exporting)}
+                onClick={() => exportDiagram("svg")}
+              >
+                {exporting === "svg" ? "Exporting..." : "SVG"}
+              </button>
+              <button
+                className="btn-primary text-xs"
+                disabled={!canExport || Boolean(exporting)}
+                onClick={() => exportDiagram("pdf")}
+              >
+                {exporting === "pdf" ? "Exporting..." : "PDF"}
+              </button>
+            </div>
+          </div>
+
+          <div className="relative h-[620px] w-full">
+            <div ref={diagramRef} className="h-full w-full">
+              <ReactFlow
+                nodes={nodes.map((node) => ({
+                  ...node,
+                  data: {
+                    ...node.data,
+                    onChange: (value: string) =>
+                      handleNodeLabelChange(node.id, value)
+                  }
+                }))}
+                edges={edges}
+                onNodesChange={onNodesChange}
+                onEdgesChange={onEdgesChange}
+                onConnect={onConnect}
+                nodeTypes={nodeTypes}
+                fitView
+                fitViewOptions={{ padding: 0.2 }}
+                defaultEdgeOptions={{
+                  markerEnd: {
+                    type: "arrowclosed",
+                    color: theme === "dark" ? "#e2e8f0" : "#0f172a"
+                  },
+                  style: {
+                    stroke: theme === "dark" ? "#94a3b8" : "#0f172a",
+                    strokeWidth: 2
+                  }
+                }}
+              >
+                <MiniMap
+                  pannable
+                  zoomable
+                  maskColor={theme === "dark" ? "#0f172acc" : "#f8fafccc"}
+                  nodeColor={() => (theme === "dark" ? "#334155" : "#dbeafe")}
+                />
+                <Controls showInteractive={false} />
+                <Background
+                  gap={24}
+                  color={theme === "dark" ? "#1f2937" : "#e2e8f0"}
+                  size={1.2}
+                  className="opacity-60"
+                />
+              </ReactFlow>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <ReactFlowProvider>
+      <DiagramApp />
+    </ReactFlowProvider>
+  );
+}

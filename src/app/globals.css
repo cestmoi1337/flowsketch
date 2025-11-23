@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+.dark {
+  color-scheme: dark;
+}
+
+* {
+  min-width: 0;
+}
+
+body {
+  @apply bg-surface-light text-slate-900 dark:bg-surface-dark dark:text-slate-100;
+}
+
+.glass-panel {
+  @apply rounded-2xl border border-border-light bg-white/80 shadow-card backdrop-blur dark:border-border-dark dark:bg-slate-900/60;
+}
+
+.input-base {
+  @apply w-full rounded-xl border border-border-light bg-white/80 px-4 py-3 text-sm text-slate-900 shadow-inner outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/30 dark:border-border-dark dark:bg-slate-900 dark:text-slate-100;
+}
+
+.btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition;
+}
+
+.btn-primary {
+  @apply btn bg-accent text-white shadow-lg shadow-accent/25 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-accent/30 active:translate-y-0;
+}
+
+.btn-ghost {
+  @apply btn border border-border-light bg-white/70 text-slate-700 hover:-translate-y-0.5 hover:border-accent hover:text-accent active:translate-y-0 dark:border-border-dark dark:bg-slate-900 dark:text-slate-100;
+}
+
+.toolbar {
+  @apply flex items-center gap-2 rounded-full border border-border-light bg-white/90 px-3 py-2 text-xs font-medium shadow-card dark:border-border-dark dark:bg-slate-900/80;
+}
