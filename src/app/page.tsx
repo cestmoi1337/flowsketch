@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ReactFlow, {
   Background,
   Connection,
+  ConnectionMode,
   Controls,
   Edge,
   EdgeChange,
@@ -442,7 +443,7 @@ function DiagramApp() {
             nodeTypes={nodeTypes}
             fitView
             fitViewOptions={{ padding: 0.2 }}
-            connectionMode="loose"
+            connectionMode={ConnectionMode.Loose}
             edgeUpdaterRadius={12}
             snapToGrid={snapToGrid}
             snapGrid={[gridSize, gridSize]}
