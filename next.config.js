@@ -1,8 +1,9 @@
 /** @type {import('next').NextConfig} */
 const repo = "flowsketch"; // fallback if BASE_PATH not provided
 const isProd = process.env.NODE_ENV === "production";
-const base = isProd ? process.env.BASE_PATH || `/${repo}` : "";
-const assetPrefix = base ? `${base}/` : undefined;
+// Serve the app at "/" but load assets from the repo path in production.
+const base = "";
+const assetPrefix = isProd ? process.env.BASE_PATH || `/${repo}` : undefined;
 
 const nextConfig = {
   reactStrictMode: true,
