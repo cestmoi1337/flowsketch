@@ -1,8 +1,7 @@
 /** @type {import('next').NextConfig} */
-const repo = "flowsketch"; // fallback if BASE_PATH not provided
-const isProd = process.env.NODE_ENV === "production";
-const base = process.env.BASE_PATH ?? (isProd ? `/${repo}` : "");
-const assetPrefix = base || undefined;
+// Use relative asset prefix so static export works on GitHub Pages subpath.
+const base = "";
+const assetPrefix = ".";
 
 const nextConfig = {
   reactStrictMode: true,
