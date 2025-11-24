@@ -20,14 +20,14 @@ export function EditableNode({ data }: NodeProps<EditableNodeData>) {
 
   return (
     <div className="relative">
-      <Handle type="target" position={Position.Top} id="t" />
-      <Handle type="target" position={Position.Left} id="l" />
-      <Handle type="target" position={Position.Right} id="r" />
-      <Handle type="target" position={Position.Bottom} id="b" />
-      <Handle type="source" position={Position.Top} id="st" />
-      <Handle type="source" position={Position.Left} id="sl" />
-      <Handle type="source" position={Position.Right} id="sr" />
-      <Handle type="source" position={Position.Bottom} id="sb" />
+      <Handle type="target" position={Position.Top} id="t" style={handleStyle(data.shape, "t")} />
+      <Handle type="target" position={Position.Left} id="l" style={handleStyle(data.shape, "l")} />
+      <Handle type="target" position={Position.Right} id="r" style={handleStyle(data.shape, "r")} />
+      <Handle type="target" position={Position.Bottom} id="b" style={handleStyle(data.shape, "b")} />
+      <Handle type="source" position={Position.Top} id="st" style={handleStyle(data.shape, "t")} />
+      <Handle type="source" position={Position.Left} id="sl" style={handleStyle(data.shape, "l")} />
+      <Handle type="source" position={Position.Right} id="sr" style={handleStyle(data.shape, "r")} />
+      <Handle type="source" position={Position.Bottom} id="sb" style={handleStyle(data.shape, "b")} />
 
       <div
         className={`min-w-[180px] max-w-[260px] px-4 py-3 text-sm shadow-card transition ${
@@ -63,10 +63,7 @@ export function EditableNode({ data }: NodeProps<EditableNodeData>) {
                 Decision
               </span>
             )}
-            <span
-              className="leading-tight block"
-              style={data.shape === "diamond" ? { transform: "rotate(-45deg)" } : undefined}
-            >
+            <span className="leading-tight block text-center">
               {data.label}
             </span>
           </div>
@@ -87,16 +84,26 @@ const deriveShapeStyle = (
     };
   if (shape === "diamond")
     return {
-      transform: "rotate(45deg)",
       borderRadius: 6,
       padding: 18,
       minWidth: 140,
       minHeight: 140,
       display: "flex",
       justifyContent: "center",
-      alignItems: "center"
+      alignItems: "center",
+      clipPath: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)"
     };
   return { borderRadius: 14 };
+};
+
+const handleStyle = (shape: EditableNodeData["shape"], pos: "t" | "b" | "l" | "r") => {
+  if (shape !== "diamond") return undefined;
+  const offset = "12%";
+  if (pos === "t") return { left: "50%", transform: "translateX(-50%) translateY(-4px)" };
+  if (pos === "b") return { left: "50%", transform: "translateX(-50%) translateY(4px)" };
+  if (pos === "l") return { top: "50%", transform: "translateY(-50%) translateX(-4px)" };
+  if (pos === "r") return { top: "50%", transform: "translateY(-50%) translateX(4px)" };
+  return undefined;
 };
 
 
