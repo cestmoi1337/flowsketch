@@ -94,7 +94,7 @@ function createFlow(tasks: ReturnType<typeof parseTasks>): FlowState {
       connectPrev(decisionId);
 
       const yesId = `${decisionId}-yes`;
-      const noId = task.branchNo ? `${decisionId}-no` : undefined;
+      const noId = `${decisionId}-no`;
 
       nodes.push({
         id: yesId,
@@ -112,26 +112,22 @@ function createFlow(tasks: ReturnType<typeof parseTasks>): FlowState {
         style: { strokeWidth: 2 }
       });
 
-      if (noId) {
-        nodes.push({
-          id: noId,
-          type: "editableNode",
-          position: { x: 160, y: y + 120 },
-          data: { label: task.branchNo || "No path", kind: "task", shape: "process" }
-        });
-        edges.push({
-          id: `${decisionId}-${noId}`,
-          source: decisionId,
-          target: noId,
-          type: "smoothstep",
-          label: "No",
-          animated: false,
-          style: { strokeWidth: 2 }
-        });
-        prevIds = [yesId, noId];
-      } else {
-        prevIds = [yesId];
-      }
+      nodes.push({
+        id: noId,
+        type: "editableNode",
+        position: { x: 160, y: y + 120 },
+        data: { label: task.branchNo || "No path", kind: "task", shape: "process" }
+      });
+      edges.push({
+        id: `${decisionId}-${noId}`,
+        source: decisionId,
+        target: noId,
+        type: "smoothstep",
+        label: "No",
+        animated: false,
+        style: { strokeWidth: 2 }
+      });
+      prevIds = [yesId, noId];
     } else {
       const nodeId = task.id;
       nodes.push({
