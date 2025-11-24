@@ -1,10 +1,11 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Handle, Position, type NodeProps } from "reactflow";
 
 type EditableNodeData = {
   label: string;
   onChange: (value: string) => void;
   kind?: "decision" | "task";
+  shape?: "pill" | "process" | "wave" | "diamond";
 };
 
 export function EditableNode({ data }: NodeProps<EditableNodeData>) {
@@ -29,7 +30,12 @@ export function EditableNode({ data }: NodeProps<EditableNodeData>) {
       <Handle type="source" position={Position.Bottom} id="sb" />
 
       <div
-        className="min-w-[180px] max-w-[260px] rounded-xl border border-border-light bg-card-light px-4 py-3 text-sm shadow-card transition dark:border-border-dark dark:bg-card-dark"
+        className={`min-w-[180px] max-w-[260px] px-4 py-3 text-sm shadow-card transition ${
+          data.kind === "decision"
+            ? "border-2 border-amber-400 bg-amber-50/80 dark:bg-amber-900/30"
+            : "border border-border-light bg-card-light dark:border-border-dark dark:bg-card-dark"
+        }`}
+        style={deriveShapeStyle(data.shape || (data.kind === "decision" ? "diamond" : "process"))}
         onDoubleClick={() => setEditing(true)}
       >
         {editing ? (
@@ -51,18 +57,47 @@ export function EditableNode({ data }: NodeProps<EditableNodeData>) {
             }}
           />
         ) : (
-          <div className="space-y-1">
+          <div className="space-y-1 text-center">
             {data.kind === "decision" && (
               <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-[2px] text-[10px] font-semibold uppercase tracking-[0.12em] text-amber-700 dark:bg-amber-900/40 dark:text-amber-200">
                 Decision
               </span>
             )}
-            <span className="leading-tight">{data.label}</span>
+            <span
+              className="leading-tight block"
+              style={data.shape === "diamond" ? { transform: "rotate(-45deg)" } : undefined}
+            >
+              {data.label}
+            </span>
           </div>
         )}
       </div>
     </div>
   );
 }
+
+const deriveShapeStyle = (
+  shape: "pill" | "process" | "wave" | "diamond"
+): React.CSSProperties => {
+  if (shape === "pill") return { borderRadius: 999 };
+  if (shape === "wave")
+    return {
+      borderRadius: "14px",
+      clipPath: "path('M0 14 C20 24, 60 4, 100 14 L100 100 L0 100 Z')"
+    };
+  if (shape === "diamond")
+    return {
+      transform: "rotate(45deg)",
+      borderRadius: 6,
+      padding: 18,
+      minWidth: 140,
+      minHeight: 140,
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center"
+    };
+  return { borderRadius: 14 };
+};
+
 
 export default EditableNode;

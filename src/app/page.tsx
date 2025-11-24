@@ -48,44 +48,108 @@ type FlowState = {
 };
 
 function createFlow(tasks: ReturnType<typeof parseTasks>): FlowState {
-  const ySpacing = 140;
+  const ySpacing = 160;
+  const nodes: Node[] = [];
+  const edges: Edge[] = [];
+  let prevIds: string[] = [];
 
-  const nodes: Node[] = tasks.map((task, index) => ({
-    id: task.id,
-    type: "editableNode",
-    position: { x: (index % 2) * 40, y: index * ySpacing },
-    data: {
-      label: task.label,
-      group: task.group,
-      verb: task.verb,
-      kind: task.kind ?? "task"
-    },
-    style:
-      task.kind === "decision"
-        ? {
-            borderStyle: "dashed",
-            borderColor: "#f59e0b",
-            background: "linear-gradient(135deg,#fff7ed,#fffbeb)"
-          }
-        : undefined
-  }));
+  tasks.forEach((task, index) => {
+    const y = index * ySpacing;
 
-  const edges: Edge[] = tasks
-    .map((task, index) => {
-      const next = tasks[index + 1];
-      if (!next) return undefined;
-      return {
-        id: `${task.id}-${next.id}`,
-        source: task.id,
-        sourceHandle: "sb",
-        target: next.id,
-        targetHandle: "t",
+    // Connect previous nodes to this task's entry (decision or task)
+    const connectPrev = (targetId: string) => {
+      prevIds.forEach((pid) => {
+        edges.push({
+          id: `${pid}-${targetId}`,
+          source: pid,
+          sourceHandle: "sb",
+          target: targetId,
+          targetHandle: "t",
+          type: "smoothstep",
+          animated: false,
+          style: { strokeWidth: 2 }
+        });
+      });
+    };
+
+    if (task.kind === "decision") {
+      const decisionId = task.id;
+      nodes.push({
+        id: decisionId,
+        type: "editableNode",
+        position: { x: 0, y },
+        data: {
+          label: task.label,
+          group: task.group,
+          verb: task.verb,
+          kind: "decision",
+          shape: "diamond"
+        },
+        style: {
+          borderStyle: "dashed",
+          borderColor: "#f59e0b",
+          background: "linear-gradient(135deg,#fff7ed,#fffbeb)"
+        }
+      });
+      connectPrev(decisionId);
+
+      const yesId = `${decisionId}-yes`;
+      const noId = task.branchNo ? `${decisionId}-no` : undefined;
+
+      nodes.push({
+        id: yesId,
+        type: "editableNode",
+        position: { x: -160, y: y + 120 },
+        data: { label: task.branchYes || "Yes path", kind: "task", shape: "process" }
+      });
+      edges.push({
+        id: `${decisionId}-${yesId}`,
+        source: decisionId,
+        target: yesId,
         type: "smoothstep",
+        label: "Yes",
         animated: false,
         style: { strokeWidth: 2 }
-      } satisfies Edge;
-    })
-    .filter(Boolean) as Edge[];
+      });
+
+      if (noId) {
+        nodes.push({
+          id: noId,
+          type: "editableNode",
+          position: { x: 160, y: y + 120 },
+          data: { label: task.branchNo || "No path", kind: "task", shape: "process" }
+        });
+        edges.push({
+          id: `${decisionId}-${noId}`,
+          source: decisionId,
+          target: noId,
+          type: "smoothstep",
+          label: "No",
+          animated: false,
+          style: { strokeWidth: 2 }
+        });
+        prevIds = [yesId, noId];
+      } else {
+        prevIds = [yesId];
+      }
+    } else {
+      const nodeId = task.id;
+      nodes.push({
+        id: nodeId,
+        type: "editableNode",
+        position: { x: 0, y },
+        data: {
+          label: task.label,
+          group: task.group,
+          verb: task.verb,
+          kind: "task",
+          shape: task.shape || "process"
+        }
+      });
+      connectPrev(nodeId);
+      prevIds = [nodeId];
+    }
+  });
 
   return { nodes, edges };
 }

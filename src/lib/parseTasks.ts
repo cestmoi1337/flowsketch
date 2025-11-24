@@ -20,6 +20,9 @@ export type ParsedTask = {
   group?: string;
   verb?: string;
   kind?: "decision" | "task";
+  branchYes?: string;
+  branchNo?: string;
+  shape?: "pill" | "process" | "wave" | "diamond";
 };
 
 export function parseTasks(input: string): ParsedTask[] {
@@ -33,16 +36,35 @@ export function parseTasks(input: string): ParsedTask[] {
       const hashtags = Array.from(line.matchAll(/#([\p{L}\p{N}_-]+)/gu)).map(
         (match) => match[1]
       );
+      const shapeMatch = line.match(/^\{(pill|process|wave|diamond)\}\s*/i);
+      const shape = shapeMatch ? (shapeMatch[1].toLowerCase() as ParsedTask["shape"]) : undefined;
+      const lineWithoutShape = shapeMatch ? line.replace(shapeMatch[0], "").trim() : line;
       const firstWord = line.split(/\s+/)[0]?.toLowerCase();
       const verb = leadingVerbs.includes(firstWord) ? firstWord : undefined;
-      const isDecision = line.startsWith("?") || line.toLowerCase().startsWith("if ");
+      const decisionMatch = line.match(
+        /^if\s+(.+?)\s+then\s+(.+?)(?:\s+else\s+(.+))?$/i
+      );
+      const isDecision =
+        !!decisionMatch || line.startsWith("?") || line.toLowerCase().startsWith("if ");
+
+      const branchYes = decisionMatch ? decisionMatch[2].trim() : undefined;
+      const branchNo = decisionMatch ? decisionMatch[3]?.trim() : undefined;
+      const condition =
+        decisionMatch && decisionMatch[1]
+          ? decisionMatch[1].trim()
+          : line.replace(/^\?/, "").replace(/#([\p{L}\p{N}_-]+)/gu, "").trim();
 
       return {
         id,
-        label: line.replace(/#([\p{L}\p{N}_-]+)/gu, "").trim(),
+        label: isDecision
+          ? condition
+          : lineWithoutShape.replace(/#([\p{L}\p{N}_-]+)/gu, "").trim(),
         group: hashtags[0],
         verb,
-        kind: isDecision ? "decision" : "task"
+        kind: isDecision ? "decision" : "task",
+        branchYes,
+        branchNo,
+        shape: isDecision ? "diamond" : shape
       };
     });
 }
