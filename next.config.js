@@ -2,8 +2,7 @@
 const repo = "flowsketch"; // fallback if BASE_PATH not provided
 const isProd = process.env.NODE_ENV === "production";
 const base = isProd ? process.env.BASE_PATH || `/${repo}` : "";
-// Align asset prefix with base path so CSS/JS resolve on GitHub Pages.
-const assetPrefix = base || undefined;
+const assetPrefix = base ? `${base}/` : undefined;
 
 const nextConfig = {
   reactStrictMode: true,
