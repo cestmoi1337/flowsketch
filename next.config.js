@@ -2,8 +2,8 @@
 const repo = "flowsketch"; // fallback if BASE_PATH not provided
 const isProd = process.env.NODE_ENV === "production";
 const base = isProd ? process.env.BASE_PATH || `/${repo}` : "";
-// Let Next.js handle assets under basePath; avoid duplicating with assetPrefix.
-const assetPrefix = undefined;
+// Align asset prefix with base path so CSS/JS resolve on GitHub Pages.
+const assetPrefix = base || undefined;
 
 const nextConfig = {
   reactStrictMode: true,

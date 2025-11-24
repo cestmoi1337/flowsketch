@@ -32,6 +32,7 @@ jobs:
       - name: Build and export
         env:
           BASE_PATH: ${{ secrets.BASE_PATH }}
+          NEXT_TELEMETRY_DISABLED: 1
         run: |
           npm run build
           touch out/.nojekyll
