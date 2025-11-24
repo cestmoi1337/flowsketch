@@ -20,14 +20,14 @@ export function EditableNode({ data }: NodeProps<EditableNodeData>) {
 
   return (
     <div className="relative">
-      <Handle type="target" position={Position.Top} id="t" />
-      <Handle type="target" position={Position.Left} id="l" />
-      <Handle type="target" position={Position.Right} id="r" />
-      <Handle type="target" position={Position.Bottom} id="b" />
-      <Handle type="source" position={Position.Top} id="st" />
-      <Handle type="source" position={Position.Left} id="sl" />
-      <Handle type="source" position={Position.Right} id="sr" />
-      <Handle type="source" position={Position.Bottom} id="sb" />
+      <Handle type="target" position={Position.Top} id="t" style={handleViz} />
+      <Handle type="target" position={Position.Left} id="l" style={handleViz} />
+      <Handle type="target" position={Position.Right} id="r" style={handleViz} />
+      <Handle type="target" position={Position.Bottom} id="b" style={handleViz} />
+      <Handle type="source" position={Position.Top} id="st" style={handleViz} />
+      <Handle type="source" position={Position.Left} id="sl" style={handleViz} />
+      <Handle type="source" position={Position.Right} id="sr" style={handleViz} />
+      <Handle type="source" position={Position.Bottom} id="sb" style={handleViz} />
 
       <div
         className={`min-w-[180px] max-w-[260px] px-4 py-3 text-sm shadow-card transition ${
@@ -63,10 +63,7 @@ export function EditableNode({ data }: NodeProps<EditableNodeData>) {
                 Decision
               </span>
             )}
-            <span
-              className="leading-tight block text-center"
-              style={data.shape === "diamond" ? { transform: "rotate(-45deg)" } : undefined}
-            >
+            <span className="leading-tight block text-center">
               {data.label}
             </span>
           </div>
@@ -89,14 +86,22 @@ const deriveShapeStyle = (
     return {
       borderRadius: 10,
       padding: 18,
-      minWidth: 160,
-      minHeight: 160,
+      minWidth: 210,
+      minHeight: 70,
       display: "flex",
       justifyContent: "center",
       alignItems: "center",
-      transform: "rotate(45deg)"
+      clipPath: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)"
     };
   return { borderRadius: 14 };
+};
+
+const handleViz: React.CSSProperties = {
+  width: 10,
+  height: 10,
+  background: "#0f172a",
+  border: "2px solid #fff",
+  boxShadow: "0 0 0 2px #0f172a"
 };
 
 
