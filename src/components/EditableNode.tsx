@@ -30,7 +30,7 @@ export function EditableNode({ data }: NodeProps<EditableNodeData>) {
       <Handle type="source" position={Position.Bottom} id="sb" style={handleViz} />
 
       <div
-        className={`min-w-[180px] max-w-[260px] px-4 py-3 text-sm shadow-card transition ${
+        className={`min-w-[180px] max-w-[260px] px-4 py-3 text-sm transition ${
           data.kind === "decision"
             ? "border-2 border-amber-400 bg-amber-50/80 dark:bg-amber-900/30"
             : "border border-border-light bg-card-light dark:border-border-dark dark:bg-card-dark"
@@ -91,9 +91,12 @@ const deriveShapeStyle = (
       display: "flex",
       justifyContent: "center",
       alignItems: "center",
-      clipPath: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)"
+      clipPath: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)",
+      boxShadow: "0 8px 20px rgba(15, 23, 42, 0.15)",
+      border: "1.5px solid #94a3b8",
+      background: "white"
     };
-  return { borderRadius: 14 };
+  return { borderRadius: 14, boxShadow: "0 8px 20px rgba(15, 23, 42, 0.12)" };
 };
 
 const handleViz: React.CSSProperties = {
@@ -101,7 +104,8 @@ const handleViz: React.CSSProperties = {
   height: 10,
   background: "#0f172a",
   border: "2px solid #fff",
-  boxShadow: "0 0 0 2px #0f172a"
+  boxShadow: "0 0 0 2px #0f172a",
+  zIndex: 2
 };
 
 

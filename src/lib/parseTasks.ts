@@ -1,3 +1,4 @@
+const decisionVerbs = ["if", "test", "check", "review"];
 const leadingVerbs = [
   "create",
   "design",
@@ -45,14 +46,28 @@ export function parseTasks(input: string): ParsedTask[] {
         /^if\s+(.+?)\s+then\s+(.+?)(?:\s+else\s+(.+))?$/i
       );
       const isDecision =
-        !!decisionMatch || line.startsWith("?") || line.toLowerCase().startsWith("if ");
+        !!decisionMatch ||
+        line.startsWith("?") ||
+        decisionVerbs.some((v) => line.toLowerCase().startsWith(v));
 
       const branchYes = decisionMatch ? decisionMatch[2].trim() : undefined;
       const branchNo = decisionMatch ? decisionMatch[3]?.trim() : undefined;
       const condition =
         decisionMatch && decisionMatch[1]
           ? decisionMatch[1].trim()
-          : line.replace(/^\?/, "").replace(/#([\p{L}\p{N}_-]+)/gu, "").trim();
+          : lineWithoutShape.replace(/^\?/, "").replace(/#([\p{L}\p{N}_-]+)/gu, "").trim();
+
+      const inferredShape = (() => {
+        if (shape) return shape;
+        if (isDecision) return "diamond";
+        const verbsToProcess = ["create", "design", "draft", "build", "implement", "deploy", "order"];
+        const verbsToPill = ["call", "meet"];
+        const verbsToWave = ["report", "form", "document"];
+        if (verbsToProcess.includes(firstWord || "")) return "process";
+        if (verbsToPill.includes(firstWord || "")) return "pill";
+        if (verbsToWave.includes(firstWord || "")) return "wave";
+        return "process";
+      })();
 
       return {
         id,
@@ -64,7 +79,7 @@ export function parseTasks(input: string): ParsedTask[] {
         kind: isDecision ? "decision" : "task",
         branchYes,
         branchNo,
-        shape: isDecision ? "diamond" : shape
+        shape: inferredShape
       };
     });
 }

@@ -198,7 +198,13 @@ function DiagramApp() {
     (connection: Connection) =>
       setFlow((current) => ({
         ...current,
-        edges: addEdge(connection, current.edges)
+        edges: addEdge(
+          {
+            ...connection,
+            type: "smoothstep"
+          },
+          current.edges
+        )
       })),
     []
   );
@@ -395,7 +401,7 @@ function DiagramApp() {
                   Branching
                 </p>
                 <p className="text-slate-500 dark:text-slate-400">
-                  Lines starting with “?” or “if ...” render as decision nodes. Use connectors to create branches.
+                  Use IF/THEN/ELSE lines to create decisions automatically. Example: “IF approve THEN Ship ELSE Rework”. “if”, “test”, “check” also infer decisions.
                 </p>
                 <div className="mt-2">
                   <label className="inline-flex items-center gap-2 text-slate-600 dark:text-slate-300">
