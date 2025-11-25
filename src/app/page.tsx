@@ -153,9 +153,10 @@ function createFlow(tasks: ReturnType<typeof parseTasks>): FlowState {
 function DiagramApp() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [text, setText] = useState(defaultText);
-  const [{ nodes, edges }, setFlow] = useState<FlowState>(() =>
-    createFlow(parseTasks(defaultText))
-  );
+  const [flow, setFlow] = useState<FlowState>(() => createFlow(parseTasks(defaultText)));
+  const flowRef = useRef<FlowState>(flow);
+  const [history, setHistory] = useState<FlowState[]>([flow]);
+  const [historyIndex, setHistoryIndex] = useState(0);
   const [exporting, setExporting] = useState<ExportType | null>(null);
   const [gridSize, setGridSize] = useState(10);
   const [snapToGrid, setSnapToGrid] = useState(true);
@@ -163,40 +164,80 @@ function DiagramApp() {
   const diagramRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
+    flowRef.current = flow;
+  }, [flow]);
+
+  const pushFlow = useCallback(
+    (next: FlowState) => {
+      setFlow(next);
+      setHistory((prev) => {
+        const truncated = prev.slice(0, historyIndex + 1);
+        return [...truncated, next];
+      });
+      setHistoryIndex((prev) => prev + 1);
+    },
+    [historyIndex]
+  );
+
+  const undo = useCallback(() => {
+    setHistoryIndex((prev) => {
+      if (prev <= 0) return prev;
+      const nextIdx = prev - 1;
+      setFlow(history[nextIdx]);
+      return nextIdx;
+    });
+  }, [history]);
+
+  const redo = useCallback(() => {
+    setHistoryIndex((prev) => {
+      if (prev >= history.length - 1) return prev;
+      const nextIdx = prev + 1;
+      setFlow(history[nextIdx]);
+      return nextIdx;
+    });
+  }, [history]);
+
+  useEffect(() => {
     const root = document.documentElement;
     root.classList.toggle("dark", theme === "dark");
   }, [theme]);
 
   const onNodesChange = useCallback(
-    (changes: NodeChange[]) =>
-      setFlow((current) => ({
-        ...current,
-        nodes: applyNodeChanges(changes, current.nodes)
-      })),
-    []
+    (changes: NodeChange[]) => {
+      const current = flowRef.current;
+      pushFlow({ ...current, nodes: applyNodeChanges(changes, current.nodes) });
+    },
+    [pushFlow]
   );
 
   const onEdgesChange = useCallback(
-    (changes: EdgeChange[]) =>
-      setFlow((current) => ({
-        ...current,
-        edges: applyEdgeChanges(changes, current.edges)
-      })),
-    []
+    (changes: EdgeChange[]) => {
+      const current = flowRef.current;
+      pushFlow({ ...current, edges: applyEdgeChanges(changes, current.edges) });
+    },
+    [pushFlow]
   );
 
   const onEdgeUpdate = useCallback(
-    (oldEdge: Edge, newConnection: Connection) =>
-      setFlow((current) => ({
-        ...current,
-        edges: updateEdge(oldEdge, newConnection, current.edges)
-      })),
-    []
+    (oldEdge: Edge, newConnection: Connection) => {
+      const current = flowRef.current;
+      pushFlow({ ...current, edges: updateEdge(oldEdge, newConnection, current.edges) });
+    },
+    [pushFlow]
+  );
+
+  const handleEdgeDelete = useCallback(
+    (id: string) => {
+      const current = flowRef.current;
+      pushFlow({ ...current, edges: current.edges.filter((e) => e.id !== id) });
+    },
+    [pushFlow]
   );
 
   const onConnect = useCallback(
-    (connection: Connection) =>
-      setFlow((current) => ({
+    (connection: Connection) => {
+      const current = flowRef.current;
+      pushFlow({
         ...current,
         edges: addEdge(
           {
@@ -205,31 +246,34 @@ function DiagramApp() {
           },
           current.edges
         )
-      })),
-    []
+      });
+    },
+    [pushFlow]
   );
 
   const regenerate = useCallback(() => {
     const parsed = parseTasks(text);
     const nextFlow = createFlow(parsed);
-    setFlow((current) => ({
+    const current = flowRef.current;
+    pushFlow({
       nodes: nextFlow.nodes,
       edges: autoConnectSequence ? nextFlow.edges : current.edges
-    }));
-  }, [text, autoConnectSequence]);
+    });
+  }, [text, autoConnectSequence, pushFlow]);
 
   const handleNodeLabelChange = useCallback((id: string, label: string) => {
-    setFlow((current) => ({
+    const current = flowRef.current;
+    pushFlow({
       ...current,
       nodes: current.nodes.map((node) =>
-        node.id === id
-          ? { ...node, data: { ...node.data, label } }
-          : node
+        node.id === id ? { ...node, data: { ...node.data, label } } : node
       )
-    }));
-  }, []);
+    });
+  }, [pushFlow]);
 
-  const canExport = nodes.length > 0;
+  const canExport = flow.nodes.length > 0;
+  const canUndo = historyIndex > 0;
+  const canRedo = historyIndex < history.length - 1;
 
   const exportDiagram = useCallback(
     async (type: ExportType) => {
@@ -282,12 +326,12 @@ function DiagramApp() {
 
   const groupedCounts = useMemo(() => {
     const counts: Record<string, number> = {};
-    nodes.forEach((node) => {
+    flow.nodes.forEach((node) => {
       const group = (node.data as { group?: string })?.group;
       if (group) counts[group] = (counts[group] || 0) + 1;
     });
     return counts;
-  }, [nodes]);
+  }, [flow.nodes]);
 
   return (
     <div
@@ -344,20 +388,20 @@ function DiagramApp() {
           </div>
 
           <div className="space-y-4 p-6">
-            <textarea
-              className="input-base h-[280px] font-mono text-sm"
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              placeholder="Paste tasks, one per line..."
-            />
+              <textarea
+                className="input-base h-[280px] font-mono text-sm"
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                placeholder="Paste tasks, one per line..."
+              />
 
-            <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-              <span>{nodes.length} nodes</span>
-              <button
-                className="btn-ghost text-xs"
-                onClick={() => setText(defaultText)}
-              >
-                Reset sample
+              <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+              <span>{flow.nodes.length} nodes</span>
+                <button
+                  className="btn-ghost text-xs"
+                  onClick={() => setText(defaultText)}
+                >
+                  Reset sample
               </button>
             </div>
 
@@ -402,6 +446,9 @@ function DiagramApp() {
                 </p>
                 <p className="text-slate-500 dark:text-slate-400">
                   Use IF/THEN/ELSE lines to create decisions automatically. Example: “IF approve THEN Ship ELSE Rework”. “if”, “test”, “check” also infer decisions.
+                </p>
+                <p className="text-slate-500 dark:text-slate-400">
+                  Connectors follow Yes/No automatically; both branches are created and linked forward. Click an edge to delete if needed.
                 </p>
                 <div className="mt-2">
                   <label className="inline-flex items-center gap-2 text-slate-600 dark:text-slate-300">
@@ -466,7 +513,16 @@ function DiagramApp() {
               </p>
               <h2 className="text-lg font-semibold">Workflow preview</h2>
             </div>
-            <div className="toolbar">
+            <div className="flex items-center gap-3">
+              <div className="toolbar">
+                <button className="btn-ghost text-xs" onClick={undo} disabled={!canUndo}>
+                  Undo
+                </button>
+                <button className="btn-ghost text-xs" onClick={redo} disabled={!canRedo}>
+                  Redo
+                </button>
+              </div>
+              <div className="toolbar">
               <button
                 className="btn-ghost text-xs"
                 disabled={!canExport || Boolean(exporting)}
@@ -488,13 +544,14 @@ function DiagramApp() {
               >
                 {exporting === "pdf" ? "Exporting..." : "PDF"}
               </button>
+              </div>
             </div>
           </div>
 
           <div className="relative h-[620px] w-full">
             <div ref={diagramRef} className="h-full w-full">
               <ReactFlow
-            nodes={nodes.map((node) => ({
+            nodes={flow.nodes.map((node) => ({
               ...node,
               data: {
                 ...node.data,
@@ -502,11 +559,15 @@ function DiagramApp() {
                   handleNodeLabelChange(node.id, value)
               }
             }))}
-            edges={edges}
+                edges={flow.edges}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onEdgeUpdate={onEdgeUpdate}
             onConnect={onConnect}
+            onEdgeClick={(e, edge) => {
+              e.stopPropagation();
+              handleEdgeDelete(edge.id);
+            }}
             nodeTypes={nodeTypes}
             fitView
             fitViewOptions={{ padding: 0.2 }}
