@@ -603,9 +603,16 @@ function DiagramApp() {
             onNodesDelete={onNodesDelete}
             onConnect={onConnect}
             onSelectionChange={onSelectionChange}
-            onEdgeClick={(e, edge) => {
+            onEdgeDoubleClick={(e, edge) => {
               e.stopPropagation();
-              handleEdgeDelete(edge.id);
+              const label = window.prompt("Connector label", edge.label || "");
+              if (label !== null) {
+                const current = flowRef.current;
+                pushFlow({
+                  ...current,
+                  edges: current.edges.map((e) => (e.id === edge.id ? { ...e, label } : e))
+                });
+              }
             }}
             nodeTypes={nodeTypes}
             fitView

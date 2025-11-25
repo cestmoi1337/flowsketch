@@ -75,21 +75,24 @@ const deriveShapeStyle = (
   if (shape === "wave")
     return {
       borderRadius: "14px",
-      clipPath: "path('M0 14 C20 24, 60 4, 100 14 L100 100 L0 100 Z')"
+      clipPath: "path('M0 18 C25 36, 75 0, 100 18 L100 100 L0 100 Z')",
+      boxShadow: "0 10px 24px rgba(15, 23, 42, 0.14)",
+      border: "1px solid #cbd5e1",
+      background: "white"
     };
   if (shape === "diamond")
     return {
       borderRadius: 10,
       padding: 18,
-      minWidth: 210,
-      minHeight: 120,
+      minWidth: 220,
+      minHeight: 140,
       display: "flex",
       justifyContent: "center",
       alignItems: "center",
       clipPath: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)",
-      boxShadow: "0 12px 24px rgba(15, 23, 42, 0.18)",
-      border: "1.5px solid #cbd5e1",
-      background: "#f8fafc"
+      boxShadow: "0 10px 24px rgba(15, 23, 42, 0.14)",
+      border: "1px solid #cbd5e1",
+      background: "white"
     };
   return { borderRadius: 14, boxShadow: "0 8px 20px rgba(15, 23, 42, 0.12)" };
 };
