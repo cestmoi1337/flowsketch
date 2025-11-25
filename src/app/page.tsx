@@ -125,7 +125,7 @@ function createFlow(tasks: ReturnType<typeof parseTasks>, autoConnect: boolean):
         });
       }
 
-      prevIds = [decisionId];
+      prevIds = autoConnect ? [] : [decisionId];
     } else {
       const nodeId = task.id;
       nodes.push({
