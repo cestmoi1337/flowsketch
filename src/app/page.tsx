@@ -55,6 +55,7 @@ function createFlow(tasks: ReturnType<typeof parseTasks>): FlowState {
 
   tasks.forEach((task, index) => {
     const y = index * ySpacing;
+    const nextTask = tasks[index + 1];
 
     // Connect previous nodes to this task's entry (decision or task)
     const connectPrev = (targetId: string) => {
@@ -73,6 +74,7 @@ function createFlow(tasks: ReturnType<typeof parseTasks>): FlowState {
     };
 
     if (task.kind === "decision") {
+      const prevChain = [...prevIds];
       const decisionId = task.id;
       nodes.push({
         id: decisionId,
@@ -86,48 +88,39 @@ function createFlow(tasks: ReturnType<typeof parseTasks>): FlowState {
           shape: "diamond"
         },
         style: {
-          borderStyle: "dashed",
-          borderColor: "#f59e0b",
-          background: "linear-gradient(135deg,#fff7ed,#fffbeb)"
+          borderStyle: "solid",
+          borderColor: "#cbd5e1",
+          background: "white"
         }
       });
       connectPrev(decisionId);
 
-      const yesId = `${decisionId}-yes`;
-      const noId = `${decisionId}-no`;
+      if (nextTask) {
+        edges.push({
+          id: `${decisionId}-${nextTask.id}-yes`,
+          source: decisionId,
+          target: nextTask.id,
+          type: "smoothstep",
+          label: "Yes",
+          animated: false,
+          style: { strokeWidth: 2 }
+        });
+      }
 
-      nodes.push({
-        id: yesId,
-        type: "editableNode",
-        position: { x: -160, y: y + 120 },
-        data: { label: task.branchYes || "Yes path", kind: "task", shape: "process" }
-      });
-      edges.push({
-        id: `${decisionId}-${yesId}`,
-        source: decisionId,
-        target: yesId,
-        type: "smoothstep",
-        label: "Yes",
-        animated: false,
-        style: { strokeWidth: 2 }
-      });
+      const noTarget = prevChain[prevChain.length - 1];
+      if (noTarget) {
+        edges.push({
+          id: `${decisionId}-${noTarget}-no`,
+          source: decisionId,
+          target: noTarget,
+          type: "smoothstep",
+          label: "No",
+          animated: false,
+          style: { strokeWidth: 2 }
+        });
+      }
 
-      nodes.push({
-        id: noId,
-        type: "editableNode",
-        position: { x: 160, y: y + 120 },
-        data: { label: task.branchNo || "No path", kind: "task", shape: "process" }
-      });
-      edges.push({
-        id: `${decisionId}-${noId}`,
-        source: decisionId,
-        target: noId,
-        type: "smoothstep",
-        label: "No",
-        animated: false,
-        style: { strokeWidth: 2 }
-      });
-      prevIds = [yesId, noId];
+      prevIds = [decisionId];
     } else {
       const nodeId = task.id;
       nodes.push({
@@ -222,6 +215,18 @@ function DiagramApp() {
     (oldEdge: Edge, newConnection: Connection) => {
       const current = flowRef.current;
       pushFlow({ ...current, edges: updateEdge(oldEdge, newConnection, current.edges) });
+    },
+    [pushFlow]
+  );
+
+  const onNodesDelete = useCallback(
+    (deleted: Node[]) => {
+      const ids = new Set(deleted.map((n) => n.id));
+      const current = flowRef.current;
+      pushFlow({
+        nodes: current.nodes.filter((n) => !ids.has(n.id)),
+        edges: current.edges.filter((e) => !ids.has(e.source) && !ids.has(e.target))
+      });
     },
     [pushFlow]
   );
@@ -561,13 +566,14 @@ function DiagramApp() {
             }))}
                 edges={flow.edges}
             onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onEdgeUpdate={onEdgeUpdate}
-            onConnect={onConnect}
-            onEdgeClick={(e, edge) => {
-              e.stopPropagation();
-              handleEdgeDelete(edge.id);
-            }}
+                onEdgesChange={onEdgesChange}
+                onEdgeUpdate={onEdgeUpdate}
+                onNodesDelete={onNodesDelete}
+                onConnect={onConnect}
+                onEdgeClick={(e, edge) => {
+                  e.stopPropagation();
+                  handleEdgeDelete(edge.id);
+                }}
             nodeTypes={nodeTypes}
             fitView
             fitViewOptions={{ padding: 0.2 }}

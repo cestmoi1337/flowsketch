@@ -32,7 +32,7 @@ export function EditableNode({ data }: NodeProps<EditableNodeData>) {
       <div
         className={`min-w-[180px] max-w-[260px] px-4 py-3 text-sm transition ${
           data.kind === "decision"
-            ? "border-2 border-amber-400 bg-amber-50/80 dark:bg-amber-900/30"
+            ? "border border-slate-300 bg-white"
             : "border border-border-light bg-card-light dark:border-border-dark dark:bg-card-dark"
         }`}
         style={deriveShapeStyle(data.shape || (data.kind === "decision" ? "diamond" : "process"))}
@@ -58,11 +58,6 @@ export function EditableNode({ data }: NodeProps<EditableNodeData>) {
           />
         ) : (
           <div className="space-y-1 text-center">
-            {data.kind === "decision" && (
-              <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-[2px] text-[10px] font-semibold uppercase tracking-[0.12em] text-amber-700 dark:bg-amber-900/40 dark:text-amber-200">
-                Decision
-              </span>
-            )}
             <span className="leading-tight block text-center">
               {data.label}
             </span>
@@ -92,8 +87,8 @@ const deriveShapeStyle = (
       justifyContent: "center",
       alignItems: "center",
       clipPath: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)",
-      boxShadow: "0 8px 20px rgba(15, 23, 42, 0.15)",
-      border: "1.5px solid #94a3b8",
+      boxShadow: "0 8px 20px rgba(15, 23, 42, 0.12)",
+      border: "1px solid #94a3b8",
       background: "white"
     };
   return { borderRadius: 14, boxShadow: "0 8px 20px rgba(15, 23, 42, 0.12)" };
