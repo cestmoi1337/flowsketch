@@ -82,19 +82,19 @@ const deriveShapeStyle = (
     };
   if (shape === "diamond")
     return {
-      borderRadius: 10,
-      padding: 18,
-      minWidth: 220,
-      minHeight: 140,
+      position: "relative",
+      padding: 22,
+      minWidth: 240,
+      minHeight: 150,
       display: "flex",
       justifyContent: "center",
       alignItems: "center",
       clipPath: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)",
-      boxShadow: "0 10px 24px rgba(15, 23, 42, 0.14)",
-      border: "1px solid rgba(148, 163, 184, 0.9)",
+      boxShadow:
+        "0 12px 28px rgba(15, 23, 42, 0.16), 0 0 0 2px rgba(148, 163, 184, 0.95)",
+      border: "1.5px solid rgba(148, 163, 184, 0.95)",
       background: "#fff",
-      overflow: "visible",
-      filter: "drop-shadow(0 0 0 1px rgba(148, 163, 184, 0.9))"
+      overflow: "visible"
     };
   return { borderRadius: 14, boxShadow: "0 8px 20px rgba(15, 23, 42, 0.12)" };
 };
