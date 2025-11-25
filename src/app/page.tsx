@@ -47,7 +47,7 @@ type FlowState = {
   edges: Edge[];
 };
 
-function createFlow(tasks: ReturnType<typeof parseTasks>): FlowState {
+function createFlow(tasks: ReturnType<typeof parseTasks>, autoConnect: boolean): FlowState {
   const ySpacing = 160;
   const nodes: Node[] = [];
   const edges: Edge[] = [];
@@ -59,6 +59,7 @@ function createFlow(tasks: ReturnType<typeof parseTasks>): FlowState {
 
     // Connect previous nodes to this task's entry (decision or task)
     const connectPrev = (targetId: string) => {
+      if (!autoConnect) return;
       prevIds.forEach((pid) => {
         edges.push({
           id: `${pid}-${targetId}`,
@@ -95,11 +96,13 @@ function createFlow(tasks: ReturnType<typeof parseTasks>): FlowState {
       });
       connectPrev(decisionId);
 
-      if (nextTask) {
+      if (autoConnect && nextTask) {
         edges.push({
           id: `${decisionId}-${nextTask.id}-yes`,
           source: decisionId,
+          sourceHandle: "sr",
           target: nextTask.id,
+          targetHandle: "t",
           type: "smoothstep",
           label: "Yes",
           animated: false,
@@ -108,11 +111,13 @@ function createFlow(tasks: ReturnType<typeof parseTasks>): FlowState {
       }
 
       const noTarget = prevChain[prevChain.length - 1];
-      if (noTarget) {
+      if (autoConnect && noTarget) {
         edges.push({
           id: `${decisionId}-${noTarget}-no`,
           source: decisionId,
+          sourceHandle: "sl",
           target: noTarget,
+          targetHandle: "t",
           type: "smoothstep",
           label: "No",
           animated: false,
@@ -146,7 +151,9 @@ function createFlow(tasks: ReturnType<typeof parseTasks>): FlowState {
 function DiagramApp() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [text, setText] = useState(defaultText);
-  const [flow, setFlow] = useState<FlowState>(() => createFlow(parseTasks(defaultText)));
+  const [flow, setFlow] = useState<FlowState>(() =>
+    createFlow(parseTasks(defaultText), true)
+  );
   const flowRef = useRef<FlowState>(flow);
   const [history, setHistory] = useState<FlowState[]>([flow]);
   const [historyIndex, setHistoryIndex] = useState(0);
@@ -155,6 +162,8 @@ function DiagramApp() {
   const [snapToGrid, setSnapToGrid] = useState(true);
   const [autoConnectSequence, setAutoConnectSequence] = useState(true);
   const diagramRef = useRef<HTMLDivElement | null>(null);
+  const [selectedNodes, setSelectedNodes] = useState<string[]>([]);
+  const [selectedEdges, setSelectedEdges] = useState<string[]>([]);
 
   useEffect(() => {
     flowRef.current = flow;
@@ -195,6 +204,24 @@ function DiagramApp() {
     root.classList.toggle("dark", theme === "dark");
   }, [theme]);
 
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key !== "Delete" && e.key !== "Backspace") return;
+      if (selectedNodes.length === 0 && selectedEdges.length === 0) return;
+      const current = flowRef.current;
+      const nodeSet = new Set(selectedNodes);
+      const edgeSet = new Set(selectedEdges);
+      pushFlow({
+        nodes: current.nodes.filter((n) => !nodeSet.has(n.id)),
+        edges: current.edges.filter(
+          (e) => !edgeSet.has(e.id) && !nodeSet.has(e.source) && !nodeSet.has(e.target)
+        )
+      });
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [selectedNodes, selectedEdges, pushFlow]);
+
   const onNodesChange = useCallback(
     (changes: NodeChange[]) => {
       const current = flowRef.current;
@@ -218,6 +245,11 @@ function DiagramApp() {
     },
     [pushFlow]
   );
+
+  const onSelectionChange = useCallback((params: { nodes: Node[]; edges: Edge[] }) => {
+    setSelectedNodes(params.nodes.map((n) => n.id));
+    setSelectedEdges(params.edges.map((e) => e.id));
+  }, []);
 
   const onNodesDelete = useCallback(
     (deleted: Node[]) => {
@@ -258,7 +290,7 @@ function DiagramApp() {
 
   const regenerate = useCallback(() => {
     const parsed = parseTasks(text);
-    const nextFlow = createFlow(parsed);
+    const nextFlow = createFlow(parsed, autoConnectSequence);
     const current = flowRef.current;
     pushFlow({
       nodes: nextFlow.nodes,
@@ -566,14 +598,15 @@ function DiagramApp() {
             }))}
                 edges={flow.edges}
             onNodesChange={onNodesChange}
-                onEdgesChange={onEdgesChange}
-                onEdgeUpdate={onEdgeUpdate}
-                onNodesDelete={onNodesDelete}
-                onConnect={onConnect}
-                onEdgeClick={(e, edge) => {
-                  e.stopPropagation();
-                  handleEdgeDelete(edge.id);
-                }}
+            onEdgesChange={onEdgesChange}
+            onEdgeUpdate={onEdgeUpdate}
+            onNodesDelete={onNodesDelete}
+            onConnect={onConnect}
+            onSelectionChange={onSelectionChange}
+            onEdgeClick={(e, edge) => {
+              e.stopPropagation();
+              handleEdgeDelete(edge.id);
+            }}
             nodeTypes={nodeTypes}
             fitView
             fitViewOptions={{ padding: 0.2 }}

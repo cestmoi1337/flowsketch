@@ -82,13 +82,13 @@ const deriveShapeStyle = (
       borderRadius: 10,
       padding: 18,
       minWidth: 210,
-      minHeight: 70,
+      minHeight: 120,
       display: "flex",
       justifyContent: "center",
       alignItems: "center",
       clipPath: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)",
-      boxShadow: "0 8px 20px rgba(15, 23, 42, 0.12)",
-      border: "1px solid #94a3b8",
+      boxShadow: "0 12px 24px rgba(15, 23, 42, 0.16)",
+      border: "1.5px solid #94a3b8",
       background: "white"
     };
   return { borderRadius: 14, boxShadow: "0 8px 20px rgba(15, 23, 42, 0.12)" };
