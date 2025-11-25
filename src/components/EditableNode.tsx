@@ -90,9 +90,11 @@ const deriveShapeStyle = (
       justifyContent: "center",
       alignItems: "center",
       clipPath: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)",
-      boxShadow: "0 10px 24px rgba(15, 23, 42, 0.14)",
-      border: "1px solid #cbd5e1",
-      background: "white"
+      boxShadow:
+        "0 10px 24px rgba(15, 23, 42, 0.14), 0 0 0 1px rgba(148, 163, 184, 0.9)",
+      border: "1px solid rgba(148, 163, 184, 0.9)",
+      background: "#fff",
+      overflow: "visible"
     };
   return { borderRadius: 14, boxShadow: "0 8px 20px rgba(15, 23, 42, 0.12)" };
 };
