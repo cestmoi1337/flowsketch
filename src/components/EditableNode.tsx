@@ -58,7 +58,10 @@ export function EditableNode({ data }: NodeProps<EditableNodeData>) {
           />
         ) : (
           <div className="space-y-1 text-center">
-            <span className="leading-tight block text-center">
+            <span
+              className="leading-tight block text-center"
+              style={data.shape === "diamond" ? { transform: "rotate(-45deg)" } : undefined}
+            >
               {data.label}
             </span>
           </div>
@@ -80,27 +83,27 @@ const deriveShapeStyle = (
     };
   if (shape === "wave")
     return {
-      borderRadius: "14px",
-      clipPath: "path('M0 18 C25 36, 75 0, 100 18 L100 100 L0 100 Z')",
+      borderRadius: 18,
       boxShadow: "0 10px 24px rgba(15, 23, 42, 0.14)",
       border: "1.5px solid #93c5fd",
-      background: "white"
+      background: "white",
+      paddingTop: 20,
+      paddingBottom: 20
     };
   if (shape === "diamond")
     return {
       position: "relative",
       padding: 22,
-      minWidth: 240,
-      minHeight: 150,
+      minWidth: 200,
+      minHeight: 200,
       display: "flex",
       justifyContent: "center",
       alignItems: "center",
-      clipPath: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)",
-      boxShadow:
-        "0 12px 28px rgba(15, 23, 42, 0.16), 0 0 0 2px rgba(147, 197, 253, 0.95)",
+      boxShadow: "0 10px 24px rgba(15, 23, 42, 0.16)",
       border: "1.5px solid #93c5fd",
       background: "#fff",
-      overflow: "visible"
+      overflow: "visible",
+      transform: "rotate(45deg)"
     };
   return {
     borderRadius: 14,
