@@ -1,9 +1,9 @@
 /** @type {import('next').NextConfig} */
-const repo = "flowsketch"; // fallback if BASE_PATH not provided
+const repo = "flowsketch";
 const isProd = process.env.NODE_ENV === "production";
-// In production, keep the app under /flowsketch but emit relative asset URLs.
-const base = isProd ? process.env.BASE_PATH || `/${repo}` : "";
-const assetPrefix = isProd ? "." : undefined;
+// Force basePath/assetPrefix for GitHub Pages so the latest build is always served from /flowsketch
+const base = isProd ? `/${repo}` : "";
+const assetPrefix = isProd ? `/${repo}` : undefined;
 
 const nextConfig = {
   reactStrictMode: true,
