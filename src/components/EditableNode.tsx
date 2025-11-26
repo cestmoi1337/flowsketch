@@ -58,12 +58,7 @@ export function EditableNode({ data }: NodeProps<EditableNodeData>) {
           />
         ) : (
           <div className="space-y-1 text-center">
-            <span
-              className="leading-tight block text-center"
-              style={data.shape === "diamond" ? { transform: "rotate(-45deg)" } : undefined}
-            >
-              {data.label}
-            </span>
+            <span className="leading-tight block text-center">{data.label}</span>
           </div>
         )}
       </div>
@@ -93,17 +88,17 @@ const deriveShapeStyle = (
   if (shape === "diamond")
     return {
       position: "relative",
-      width: 160,
-      height: 160,
+      minWidth: 120,
+      minHeight: 120,
+      padding: 10,
       display: "flex",
       justifyContent: "center",
       alignItems: "center",
-      boxShadow: "0 8px 18px rgba(15, 23, 42, 0.14), 0 0 0 2px #6ea8ff",
-      border: "2px solid #6ea8ff",
+      boxShadow: "0 8px 18px rgba(15, 23, 42, 0.12), 0 0 0 1.5px #93c5fd",
+      border: "1.5px solid #93c5fd",
       background: "#fff",
       overflow: "visible",
-      transform: "rotate(45deg)",
-      borderRadius: 12
+      clipPath: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)"
     };
   return {
     borderRadius: 14,
@@ -128,10 +123,10 @@ const getHandleStyle = (shape: EditableNodeData["shape"], pos: "t" | "b" | "l" |
     ...handleViz,
     position: "absolute"
   };
-  if (pos === "t") return { ...base, top: "-6px", left: "50%", transform: "translateX(-50%) rotate(-45deg)" };
-  if (pos === "b") return { ...base, bottom: "-6px", left: "50%", transform: "translateX(-50%) rotate(-45deg)" };
-  if (pos === "l") return { ...base, left: "-6px", top: "50%", transform: "translateY(-50%) rotate(-45deg)" };
-  if (pos === "r") return { ...base, right: "-6px", top: "50%", transform: "translateY(-50%) rotate(-45deg)" };
+  if (pos === "t") return { ...base, top: "-10px", left: "50%", transform: "translateX(-50%)" };
+  if (pos === "b") return { ...base, bottom: "-10px", left: "50%", transform: "translateX(-50%)" };
+  if (pos === "l") return { ...base, left: "-10px", top: "50%", transform: "translateY(-50%)" };
+  if (pos === "r") return { ...base, right: "-10px", top: "50%", transform: "translateY(-50%)" };
   return base;
 };
 
