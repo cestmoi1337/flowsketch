@@ -58,7 +58,10 @@ export function EditableNode({ data }: NodeProps<EditableNodeData>) {
           />
         ) : (
           <div className="space-y-1 text-center">
-            <span className="leading-tight block text-center">
+            <span
+              className="leading-tight block text-center"
+              style={data.shape === "diamond" ? { transform: "rotate(-45deg)" } : undefined}
+            >
               {data.label}
             </span>
           </div>
@@ -90,9 +93,8 @@ const deriveShapeStyle = (
   if (shape === "diamond")
     return {
       position: "relative",
-      padding: 12,
-      minWidth: 150,
-      minHeight: 150,
+      width: 160,
+      height: 160,
       display: "flex",
       justifyContent: "center",
       alignItems: "center",
@@ -100,7 +102,8 @@ const deriveShapeStyle = (
       border: "2px solid #6ea8ff",
       background: "#fff",
       overflow: "visible",
-      clipPath: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)"
+      transform: "rotate(45deg)",
+      borderRadius: 12
     };
   return {
     borderRadius: 14,
@@ -125,10 +128,10 @@ const getHandleStyle = (shape: EditableNodeData["shape"], pos: "t" | "b" | "l" |
     ...handleViz,
     position: "absolute"
   };
-  if (pos === "t") return { ...base, top: "-6px", left: "50%", transform: "translateX(-50%)" };
-  if (pos === "b") return { ...base, bottom: "-6px", left: "50%", transform: "translateX(-50%)" };
-  if (pos === "l") return { ...base, left: "-6px", top: "50%", transform: "translateY(-50%)" };
-  if (pos === "r") return { ...base, right: "-6px", top: "50%", transform: "translateY(-50%)" };
+  if (pos === "t") return { ...base, top: "-6px", left: "50%", transform: "translateX(-50%) rotate(-45deg)" };
+  if (pos === "b") return { ...base, bottom: "-6px", left: "50%", transform: "translateX(-50%) rotate(-45deg)" };
+  if (pos === "l") return { ...base, left: "-6px", top: "50%", transform: "translateY(-50%) rotate(-45deg)" };
+  if (pos === "r") return { ...base, right: "-6px", top: "50%", transform: "translateY(-50%) rotate(-45deg)" };
   return base;
 };
 
