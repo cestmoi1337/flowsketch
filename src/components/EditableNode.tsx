@@ -58,10 +58,7 @@ export function EditableNode({ data }: NodeProps<EditableNodeData>) {
           />
         ) : (
           <div className="space-y-1 text-center">
-            <span
-              className="leading-tight block text-center"
-              style={data.shape === "diamond" ? { transform: "rotate(-45deg)" } : undefined}
-            >
+            <span className="leading-tight block text-center">
               {data.label}
             </span>
           </div>
@@ -124,10 +121,11 @@ const handleViz: React.CSSProperties = {
 
 const getHandleStyle = (shape: EditableNodeData["shape"], pos: "t" | "b" | "l" | "r") => {
   if (shape !== "diamond") return handleViz;
-  if (pos === "t") return { ...handleViz, transform: "translate(-50%, -50%)" };
-  if (pos === "b") return { ...handleViz, transform: "translate(-50%, 50%)" };
-  if (pos === "l") return { ...handleViz, transform: "translate(-50%, -50%)" };
-  if (pos === "r") return { ...handleViz, transform: "translate(50%, -50%)" };
+  const offset = "-4px";
+  if (pos === "t") return { ...handleViz, top: offset };
+  if (pos === "b") return { ...handleViz, bottom: offset };
+  if (pos === "l") return { ...handleViz, left: offset };
+  if (pos === "r") return { ...handleViz, right: offset };
   return handleViz;
 };
 
