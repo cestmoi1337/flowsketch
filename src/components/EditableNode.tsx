@@ -90,14 +90,14 @@ const deriveShapeStyle = (
   if (shape === "diamond")
     return {
       position: "relative",
-      padding: 16,
-      minWidth: 180,
-      minHeight: 180,
+      padding: 12,
+      minWidth: 150,
+      minHeight: 150,
       display: "flex",
       justifyContent: "center",
       alignItems: "center",
-      boxShadow: "0 10px 24px rgba(15, 23, 42, 0.16)",
-      border: "1.5px solid #93c5fd",
+      boxShadow: "0 8px 18px rgba(15, 23, 42, 0.14), 0 0 0 2px #6ea8ff",
+      border: "2px solid #6ea8ff",
       background: "#fff",
       overflow: "visible",
       clipPath: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)"
@@ -121,12 +121,15 @@ const handleViz: React.CSSProperties = {
 
 const getHandleStyle = (shape: EditableNodeData["shape"], pos: "t" | "b" | "l" | "r") => {
   if (shape !== "diamond") return handleViz;
-  const offset = "-4px";
-  if (pos === "t") return { ...handleViz, top: offset };
-  if (pos === "b") return { ...handleViz, bottom: offset };
-  if (pos === "l") return { ...handleViz, left: offset };
-  if (pos === "r") return { ...handleViz, right: offset };
-  return handleViz;
+  const base: React.CSSProperties = {
+    ...handleViz,
+    position: "absolute"
+  };
+  if (pos === "t") return { ...base, top: "-6px", left: "50%", transform: "translateX(-50%)" };
+  if (pos === "b") return { ...base, bottom: "-6px", left: "50%", transform: "translateX(-50%)" };
+  if (pos === "l") return { ...base, left: "-6px", top: "50%", transform: "translateY(-50%)" };
+  if (pos === "r") return { ...base, right: "-6px", top: "50%", transform: "translateY(-50%)" };
+  return base;
 };
 
 export default EditableNode;
