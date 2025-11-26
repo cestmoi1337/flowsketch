@@ -32,8 +32,8 @@ export function EditableNode({ data }: NodeProps<EditableNodeData>) {
       <div
         className={`min-w-[180px] max-w-[260px] px-4 py-3 text-sm transition ${
           data.kind === "decision"
-            ? "border border-slate-300 bg-white"
-            : "border border-border-light bg-card-light dark:border-border-dark dark:bg-card-dark"
+            ? "border bg-white"
+            : "border bg-card-light dark:bg-card-dark"
         }`}
         style={deriveShapeStyle(data.shape || (data.kind === "decision" ? "diamond" : "process"))}
         onDoubleClick={() => setEditing(true)}
@@ -71,13 +71,19 @@ export function EditableNode({ data }: NodeProps<EditableNodeData>) {
 const deriveShapeStyle = (
   shape: "pill" | "process" | "wave" | "diamond"
 ): React.CSSProperties => {
-  if (shape === "pill") return { borderRadius: 999 };
+  if (shape === "pill")
+    return {
+      borderRadius: 999,
+      border: "1.5px solid #93c5fd",
+      boxShadow: "0 10px 24px rgba(15, 23, 42, 0.14)",
+      background: "white"
+    };
   if (shape === "wave")
     return {
       borderRadius: "14px",
       clipPath: "path('M0 18 C25 36, 75 0, 100 18 L100 100 L0 100 Z')",
       boxShadow: "0 10px 24px rgba(15, 23, 42, 0.14)",
-      border: "1px solid #cbd5e1",
+      border: "1.5px solid #93c5fd",
       background: "white"
     };
   if (shape === "diamond")
@@ -91,12 +97,17 @@ const deriveShapeStyle = (
       alignItems: "center",
       clipPath: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)",
       boxShadow:
-        "0 12px 28px rgba(15, 23, 42, 0.16), 0 0 0 2px rgba(148, 163, 184, 0.95)",
-      border: "1.5px solid rgba(148, 163, 184, 0.95)",
+        "0 12px 28px rgba(15, 23, 42, 0.16), 0 0 0 2px rgba(147, 197, 253, 0.95)",
+      border: "1.5px solid #93c5fd",
       background: "#fff",
       overflow: "visible"
     };
-  return { borderRadius: 14, boxShadow: "0 8px 20px rgba(15, 23, 42, 0.12)" };
+  return {
+    borderRadius: 14,
+    border: "1.5px solid #93c5fd",
+    boxShadow: "0 8px 20px rgba(15, 23, 42, 0.12)",
+    background: "white"
+  };
 };
 
 const handleViz: React.CSSProperties = {
