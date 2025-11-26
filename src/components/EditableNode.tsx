@@ -62,15 +62,15 @@ const NodeShape = ({ shape, label }: { shape: EditableNodeData["shape"]; label?:
 
   if (shape === "diamond") {
     return (
-      <svg width={160} height={160} viewBox="0 0 160 160" className="drop-shadow-[0_8px_18px_rgba(15,23,42,0.12)]">
+      <svg width={160} height={90} viewBox="0 0 160 90" className="drop-shadow-[0_8px_18px_rgba(15,23,42,0.12)]">
         <polygon
-          points="80,0 160,80 80,160 0,80"
+          points="80,0 160,45 80,90 0,45"
           fill={fill}
           stroke={stroke}
           strokeWidth={2}
         />
         {label && (
-          <text x="80" y="85" textAnchor="middle" fontSize="14" fill="#0f172a" fontWeight="600">
+          <text x="80" y="52" textAnchor="middle" fontSize="14" fill="#0f172a" fontWeight="600">
             {label}
           </text>
         )}
