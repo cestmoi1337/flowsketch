@@ -20,14 +20,14 @@ export function EditableNode({ data }: NodeProps<EditableNodeData>) {
 
   return (
     <div className="relative">
-      <Handle type="target" position={Position.Top} id="t" style={handleViz} />
-      <Handle type="target" position={Position.Left} id="l" style={handleViz} />
-      <Handle type="target" position={Position.Right} id="r" style={handleViz} />
-      <Handle type="target" position={Position.Bottom} id="b" style={handleViz} />
-      <Handle type="source" position={Position.Top} id="st" style={handleViz} />
-      <Handle type="source" position={Position.Left} id="sl" style={handleViz} />
-      <Handle type="source" position={Position.Right} id="sr" style={handleViz} />
-      <Handle type="source" position={Position.Bottom} id="sb" style={handleViz} />
+      <Handle type="target" position={Position.Top} id="t" style={getHandleStyle(data.shape, "t")} />
+      <Handle type="target" position={Position.Left} id="l" style={getHandleStyle(data.shape, "l")} />
+      <Handle type="target" position={Position.Right} id="r" style={getHandleStyle(data.shape, "r")} />
+      <Handle type="target" position={Position.Bottom} id="b" style={getHandleStyle(data.shape, "b")} />
+      <Handle type="source" position={Position.Top} id="st" style={getHandleStyle(data.shape, "t")} />
+      <Handle type="source" position={Position.Left} id="sl" style={getHandleStyle(data.shape, "l")} />
+      <Handle type="source" position={Position.Right} id="sr" style={getHandleStyle(data.shape, "r")} />
+      <Handle type="source" position={Position.Bottom} id="sb" style={getHandleStyle(data.shape, "b")} />
 
       <div
         className={`min-w-[180px] max-w-[260px] px-4 py-3 text-sm transition ${
@@ -93,9 +93,9 @@ const deriveShapeStyle = (
   if (shape === "diamond")
     return {
       position: "relative",
-      padding: 22,
-      minWidth: 200,
-      minHeight: 200,
+      padding: 16,
+      minWidth: 180,
+      minHeight: 180,
       display: "flex",
       justifyContent: "center",
       alignItems: "center",
@@ -103,7 +103,7 @@ const deriveShapeStyle = (
       border: "1.5px solid #93c5fd",
       background: "#fff",
       overflow: "visible",
-      transform: "rotate(45deg)"
+      clipPath: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)"
     };
   return {
     borderRadius: 14,
@@ -122,5 +122,13 @@ const handleViz: React.CSSProperties = {
   zIndex: 2
 };
 
+const getHandleStyle = (shape: EditableNodeData["shape"], pos: "t" | "b" | "l" | "r") => {
+  if (shape !== "diamond") return handleViz;
+  if (pos === "t") return { ...handleViz, transform: "translate(-50%, -50%)" };
+  if (pos === "b") return { ...handleViz, transform: "translate(-50%, 50%)" };
+  if (pos === "l") return { ...handleViz, transform: "translate(-50%, -50%)" };
+  if (pos === "r") return { ...handleViz, transform: "translate(50%, -50%)" };
+  return handleViz;
+};
 
 export default EditableNode;
