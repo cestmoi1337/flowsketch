@@ -20,6 +20,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -31,7 +33,7 @@ jobs:
 
       - name: Build and export
         env:
-          BASE_PATH: ${{ secrets.BASE_PATH }}
+          BASE_PATH: /flowsketch
           NEXT_TELEMETRY_DISABLED: 1
         run: |
           npm run build
