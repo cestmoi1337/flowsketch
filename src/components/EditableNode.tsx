@@ -29,19 +29,12 @@ export function EditableNode({ data }: NodeProps<EditableNodeData>) {
       <Handle type="source" position={Position.Right} id="sr" style={getHandleStyle(data.shape, "r")} />
       <Handle type="source" position={Position.Bottom} id="sb" style={getHandleStyle(data.shape, "b")} />
 
-      <div
-        className={`min-w-[180px] max-w-[260px] px-4 py-3 text-sm transition ${
-          data.kind === "decision"
-            ? "border bg-white"
-            : "border bg-card-light dark:bg-card-dark"
-        }`}
-        style={deriveShapeStyle(data.shape || (data.kind === "decision" ? "diamond" : "process"))}
-        onDoubleClick={() => setEditing(true)}
-      >
-        {editing ? (
+      <div className="px-2 py-2" onDoubleClick={() => setEditing(true)}>
+        <NodeShape shape={data.shape || (data.kind === "decision" ? "diamond" : "process")} label={editing ? undefined : data.label} />
+        {editing && (
           <input
             autoFocus
-            className="w-full rounded-lg border border-border-light bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-accent focus:ring-2 focus:ring-accent/30 dark:border-border-dark dark:bg-slate-900 dark:text-slate-100"
+            className="absolute left-1/2 top-1/2 w-[180px] -translate-x-1/2 -translate-y-1/2 rounded-lg border border-border-light bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-accent focus:ring-2 focus:ring-accent/30"
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             onBlur={commit}
@@ -56,15 +49,67 @@ export function EditableNode({ data }: NodeProps<EditableNodeData>) {
               }
             }}
           />
-        ) : (
-          <div className="space-y-1 text-center">
-            <span className="leading-tight block text-center">{data.label}</span>
-          </div>
         )}
       </div>
     </div>
   );
 }
+
+const NodeShape = ({ shape, label }: { shape: EditableNodeData["shape"]; label?: string }) => {
+  const stroke = "#6ea8ff";
+  const fill = "#fff";
+  const shadow = "0 8px 18px rgba(15, 23, 42, 0.12)";
+
+  if (shape === "diamond") {
+    return (
+      <svg width={160} height={160} viewBox="0 0 160 160" className="drop-shadow-[0_8px_18px_rgba(15,23,42,0.12)]">
+        <polygon
+          points="80,0 160,80 80,160 0,80"
+          fill={fill}
+          stroke={stroke}
+          strokeWidth={2}
+        />
+        {label && (
+          <text x="80" y="85" textAnchor="middle" fontSize="14" fill="#0f172a" fontWeight="600">
+            {label}
+          </text>
+        )}
+      </svg>
+    );
+  }
+
+  if (shape === "wave") {
+    return (
+      <svg width={220} height={100} viewBox="0 0 220 100" className="drop-shadow-[0_8px_18px_rgba(15,23,42,0.12)]">
+        <path
+          d="M0,25 C40,45 80,5 120,25 L220,25 L220,100 L0,100 Z"
+          fill={fill}
+          stroke={stroke}
+          strokeWidth={2}
+          rx={14}
+        />
+        <rect x="0" y="25" width="220" height="75" fill={fill} stroke="none" />
+        {label && (
+          <text x="110" y="65" textAnchor="middle" fontSize="14" fill="#0f172a" fontWeight="600">
+            {label}
+          </text>
+        )}
+      </svg>
+    );
+  }
+
+  const radius = shape === "pill" ? 999 : 12;
+  return (
+    <svg width={220} height={70} viewBox="0 0 220 70" className="drop-shadow-[0_8px_18px_rgba(15,23,42,0.12)]">
+      <rect x="0" y="0" width="220" height="70" rx={radius} ry={radius} fill={fill} stroke={stroke} strokeWidth={2} />
+      {label && (
+        <text x="110" y="40" textAnchor="middle" fontSize="14" fill="#0f172a" fontWeight="600">
+          {label}
+        </text>
+      )}
+    </svg>
+  );
+};
 
 const deriveShapeStyle = (
   shape: "pill" | "process" | "wave" | "diamond"
