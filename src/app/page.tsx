@@ -605,7 +605,8 @@ function DiagramApp() {
             onSelectionChange={onSelectionChange}
             onEdgeDoubleClick={(e, edge) => {
               e.stopPropagation();
-              const label = window.prompt("Connector label", edge.label || "");
+              const currentLabel = typeof edge.label === "string" ? edge.label : undefined;
+              const label = window.prompt("Connector label", currentLabel);
               if (label !== null) {
                 const current = flowRef.current;
                 pushFlow({
